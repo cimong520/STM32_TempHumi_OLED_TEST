@@ -217,9 +217,11 @@ typedef struct {
 
 // 定义映射数组
 NameValueMap name_flag_maps[] = {
-	{"Fun",TYPE_FLOAT, {.f = &data.Variable.Humi}},
-//    {"Temp_Threshold", TYPE_FLOAT, {.f = &Temp_threshold}},
-//	{"Humi_threshold", TYPE_FLOAT, {.f = &Humi_threshold}},
+	{"Fun", TYPE_FLOAT, {.f = &data.Variable.Humi}},
+	{"Relay", TYPE_UINT16, {.u16 = &data.flag.motor_flag}},     // 继电器控制
+	{"LED", TYPE_UINT8, {.u8 = &data.flag.led}},               // LED控制
+	{"TempThreshold", TYPE_FLOAT, {.f = &data.Threshold.Temp}}, // 温度阈值
+	{"HumiThreshold", TYPE_FLOAT, {.f = &data.Threshold.Humi}}, // 湿度阈值
 //    {"MQ2_threshold", TYPE_UINT16, {.u16 = &MQ2_Val_threshold}},
 //	{"MQ3_threshold", TYPE_UINT16, {.u16 = &MQ3_Val_threshold}},
 //	{"SO2_threshold", TYPE_UINT16, {.u16 = &MQ135_Val_threshold}}

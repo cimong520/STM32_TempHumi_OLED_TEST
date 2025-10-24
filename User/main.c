@@ -32,7 +32,45 @@ uint8_t main_mode_flag  = 0, main_key_flag = 0 ;
  * 在这里调用各模块的数据获取函数
  */
 void GetData(void){
+    // 数据获取逻辑
+}
 
+// 处理云端控制指令
+void Process_Cloud_Control(void){
+    static uint16_t last_motor_flag = 0;
+    static uint8_t last_led = 0;
+    
+    // 检查继电器控制变化
+    if(data.flag.motor_flag != last_motor_flag) {
+        Serial_SendString("云端控制: 继电器状态变更为 ");
+        Serial_SendNumber(data.flag.motor_flag, 1);
+        Serial_SendString("\r\n");
+        
+        if(data.flag.motor_flag > 0) {
+            relay_ON();
+            Serial_SendString("继电器已开启\r\n");
+        } else {
+            relay_OFF();
+            Serial_SendString("继电器已关闭\r\n");
+        }
+        last_motor_flag = data.flag.motor_flag;
+    }
+    
+    // 检查LED控制变化
+    if(data.flag.led != last_led) {
+        Serial_SendString("云端控制: LED状态变更为 ");
+        Serial_SendNumber(data.flag.led, 1);
+        Serial_SendString("\r\n");
+        
+        if(data.flag.led > 0) {
+            // LED_ON();  // 如果有LED控制函数
+            Serial_SendString("LED已开启\r\n");
+        } else {
+            // LED_OFF();
+            Serial_SendString("LED已关闭\r\n");
+        }
+        last_led = data.flag.led;
+    }
 }
 
 /**
@@ -172,6 +210,9 @@ void Task_Initialization(void){
 	// 恢复自动化任务
 	wifiID = Task_Add(WIFI_Init, 5000, PRIORITY_NORMAL, "WIFI_Init");        // 每5秒检查WiFi和云端连接状态
 	uploadID = Task_Add(upload_data, 30000, PRIORITY_NORMAL, "uploadID");    // 每30秒自动上传数据
+	
+	// 添加云端控制处理任务
+	TaskID controlTaskID = Task_Add(Process_Cloud_Control, 100, PRIORITY_HIGH, "CloudControl"); // 每100ms检查控制指令
 }
 //温度显示图像
 // 简单的温度曲线函数
