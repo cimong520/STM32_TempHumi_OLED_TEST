@@ -117,6 +117,7 @@ void Mode(void) {
 void Menu_key_set(void)									//按键扫描
 {
 	if (wifi.rxover == 1) {
+		Serial_SendString("\r\n【Menu_key_set】检测到wifi.rxover=1，调用DataAnylize()\r\n");
 		DataAnylize();
 	}
 	data.flag.key1 = Get_Key_1();										
@@ -280,6 +281,13 @@ void Test_ESP8266(void)
     
     // 监听ESP8266的任何输出
     if(wifi.rxover == 1) {
+        // ========== 【关键修复】先处理控制指令 ==========
+        if(strstr((char*)wifi.rxbuff, "topic=tang2") && strstr((char*)wifi.rxbuff, "msg=")) {
+            Serial_SendString("\r\n【Test_ESP8266】检测到tang2控制指令，调用DataAnylize()\r\n");
+            DataAnylize();  // 调用DataAnylize处理控制指令
+            return;  // 处理完直接返回
+        }
+        
         // 过滤掉重复的信息，只显示重要的状态变化
         if(!strstr((char*)wifi.rxbuff, "[单片机接收] AT") && 
            !strstr((char*)wifi.rxbuff, "[单片机接收] CMD:CONNECTED_TCP") &&
