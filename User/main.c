@@ -231,7 +231,8 @@ void Test_ESP8266(void)
         Serial_SendString("connect_flag: ");
         Serial_SendNumber(connect_flag, 1);
         Serial_SendString("\r\n");
-        Serial_SendString("按键1=连接巴法云  按键2=更新WiFi状态  按键3连按3次=强制设置云端连接  按键4=上传数据\r\n");
+        Serial_SendString("按键1=连接巴法云  按键2=更新WiFi状态  按键4=上传数据\r\n");
+        Serial_SendString("注意: DataAnylize()正在处理ESP8266数据\r\n");
         Serial_SendString("===================\r\n\r\n");
         last_status_time = current_time;
     }
@@ -409,19 +410,16 @@ int main(void)
 {	
 	SystemInit();  
 	Delay_Init();	
-	//Initialization();
+	Initialization();  // 系统初始化（包含OLED、按键、ESP8266、任务系统等）
+	
+	// 补充Initialization()中没有的初始化
+	DHT11_Init();      // DHT11温湿度传感器初始化
+	Buzzer_Init();     // 蜂鸣器初始化
+	relay_Init();      // 继电器初始化
+	Serial_Init();     // 串口1初始化（调试用）
 	
 	uint32_t start_time = Task_GetSystemTime();
 	
-	// 先初始化OLED
-	OLED_Init();
-	// 初始化DHT11
-	DHT11_Init();
-	Buzzer_Init();//蜂鸣器初始化
-	relay_Init(); //继电器初始化
-	Key_Init(); //按键初始化
-	Serial_Init();//串口初始化
-	ESP8266_Config(); // ESP8266串口初始化（USART2）
 	//变量
 	Serial_SendString("mode");
 	static uint32_t last_temp_read = 0;

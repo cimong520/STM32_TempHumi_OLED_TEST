@@ -23,7 +23,7 @@ void Initialization(void){
 	Key_Init();						//按键初始化	
 	MyRTC_Init();
 	ESP8266_Config();
-	Check_the_network();
+	// Check_the_network(); // 暂时注释掉，避免发送干扰命令
 //	模块初始化调用
 //
 //	模块初始化调用结束
