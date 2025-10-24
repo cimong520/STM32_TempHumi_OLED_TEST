@@ -3570,9 +3570,9 @@
       </Doc>
       <Doc>
         <Name>.\User\main.c</Name>
-        <ColumnNumber>15</ColumnNumber>
-        <TopLine>402</TopLine>
-        <CurrentLine>413</CurrentLine>
+        <ColumnNumber>0</ColumnNumber>
+        <TopLine>85</TopLine>
+        <CurrentLine>79</CurrentLine>
         <Folding>1</Folding>
         <ContractedFolders></ContractedFolders>
         <PaneID>0</PaneID>

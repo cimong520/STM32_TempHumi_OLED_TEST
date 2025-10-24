@@ -169,9 +169,9 @@ void Task_Initialization(void){
     alarmTaskID = Task_Add(Alarm, 100, PRIORITY_HIGH, "Alarm");
    // showTaskID = Task_Add(ShowData, 0, PRIORITY_NORMAL, "ShowData");
 	IWDG_ID = Task_Add(IWDGADD, 1000, PRIORITY_HIGH, "IWDG_ID");
-	// 恢复WiFi和上传任务，巴法云已连接成功
-	//wifiID = Task_Add(WIFI_Init, 5000, PRIORITY_NORMAL, "WIFI_Init");
-	//uploadID = Task_Add(upload_data, 30000, PRIORITY_NORMAL, "uploadID");  // 每30秒自动上传
+	// 恢复自动化任务
+	wifiID = Task_Add(WIFI_Init, 5000, PRIORITY_NORMAL, "WIFI_Init");        // 每5秒检查WiFi和云端连接状态
+	uploadID = Task_Add(upload_data, 30000, PRIORITY_NORMAL, "uploadID");    // 每30秒自动上传数据
 }
 //温度显示图像
 // 简单的温度曲线函数
