@@ -685,6 +685,11 @@
               <FileType>5</FileType>
               <FilePath>.\User\menu.h</FilePath>
             </File>
+            <File>
+              <FileName>Details_of_the_fix.md</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\User\Details_of_the_fix.md</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

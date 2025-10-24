@@ -750,7 +750,7 @@ I (.\Library\stm32f10x_usart.h)(0x4D783BB4)
 I (.\Library\stm32f10x_wwdg.h)(0x4D783BB4)
 I (.\Library\misc.h)(0x4D783BB4)
 F (.\Library\stm32f10x_wwdg.h)(0x4D783BB4)()
-F (.\User\main.c)(0x68FB33F4)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\Library -I .\User -I .\HardWare -I .\System --no-multibyte-chars-I.\RTE\_Target_1-ID:\Keli_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\Keli_v5\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
+F (.\User\main.c)(0x68FB3CE0)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\Library -I .\User -I .\HardWare -I .\System --no-multibyte-chars-I.\RTE\_Target_1-ID:\Keli_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\Keli_v5\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
 I (User\../System/Initialization.h)(0x68BA5BE7)
 I (User\../System/../Start/stm32f10x.h)(0x68A3EA20)
 I (User\../System/../Start/./core_cm3.h)(0x6895669E)
@@ -871,6 +871,7 @@ I (User\../HardWare/relay.h)(0x67DA4C42)
 I (User\../HardWare/Serial.h)(0x62E10821)
 I (D:\Keli_v5\ARM\ARMCC\include\stdio.h)(0x588B8344)
 F (.\User\menu.h)(0x68F72C52)()
+F (.\User\Details_of_the_fix.md)(0x68FB3E15)()
 F (.\HardWare\LED.c)(0x68955AC0)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\Library -I .\User -I .\HardWare -I .\System --no-multibyte-chars-I.\RTE\_Target_1-ID:\Keli_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\Keli_v5\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\led.o --omf_browse .\objects\led.crf --depend .\objects\led.d)
 I (HardWare\../System/Initialization_Data.h)(0x68B6BF88)
 I (HardWare\../System/../Library/stm32f10x_gpio.h)(0x6895683C)
@@ -940,7 +941,7 @@ I (.\Library\misc.h)(0x4D783BB4)
 I (HardWare\./key.h)(0x68F5A72D)
 I (HardWare\../System/Delay.h)(0x68F3555A)
 F (.\HardWare\key.h)(0x68F5A72D)()
-F (.\HardWare\esp8266.c)(0x68FB32D7)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\Library -I .\User -I .\HardWare -I .\System --no-multibyte-chars-I.\RTE\_Target_1-ID:\Keli_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\Keli_v5\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\esp8266.o --omf_browse .\objects\esp8266.crf --depend .\objects\esp8266.d)
+F (.\HardWare\esp8266.c)(0x68FB3CD1)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I .\Start -I .\Library -I .\User -I .\HardWare -I .\System --no-multibyte-chars-I.\RTE\_Target_1-ID:\Keli_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Device\Include-ID:\Keli_v5\ARM\CMSIS\Include-D__UVISION_VERSION="524" -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER-o .\objects\esp8266.o --omf_browse .\objects\esp8266.crf --depend .\objects\esp8266.d)
 I (HardWare\esp8266.h)(0x68F8A4BD)
 I (.\Start\stm32f10x.h)(0x68A3EA20)
 I (.\Start\./core_cm3.h)(0x6895669E)

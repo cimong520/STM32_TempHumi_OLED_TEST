@@ -117,8 +117,7 @@ void Mode(void) {
 void Menu_key_set(void)									//按键扫描
 {
 	if (wifi.rxover == 1) {
-		Serial_SendString("\r\n【Menu_key_set】检测到wifi.rxover=1，调用DataAnylize()\r\n");
-		DataAnylize();
+		DataAnylize();  // 处理ESP8266数据（包括云端控制指令）
 	}
 	data.flag.key1 = Get_Key_1();										
 	data.flag.key2 = Get_Key_2();										
@@ -279,37 +278,45 @@ void Test_ESP8266(void)
         last_status_time = current_time;
     }
     
-    // 监听ESP8266的任何输出
-    if(wifi.rxover == 1) {
-        // ========== 【关键修复】先处理控制指令 ==========
-        if(strstr((char*)wifi.rxbuff, "topic=tang2") && strstr((char*)wifi.rxbuff, "msg=")) {
-            Serial_SendString("\r\n【Test_ESP8266】检测到tang2控制指令，调用DataAnylize()\r\n");
-            DataAnylize();  // 调用DataAnylize处理控制指令
-            return;  // 处理完直接返回
-        }
+    // 监听ESP8266的任何输出（只负责显示，不处理业务逻辑）
+    // 注意：wifi.rxover 的处理已经在 Menu_key_set() -> DataAnylize() 中完成
+    // 这里只是显示ESP8266的调试信息
+    static uint8_t last_rxbuff[RXMAX];
+    static uint8_t has_data = 0;
+    
+    // 保存一份数据用于显示（因为DataAnylize会清空）
+    if(wifi.rxover == 1 && !has_data) {
+        memcpy(last_rxbuff, wifi.rxbuff, RXMAX);
+        has_data = 1;
+    }
+    
+    // 如果数据已被处理（rxover变为0），则显示保存的数据
+    if(has_data && wifi.rxover == 0) {
+        has_data = 0;
         
         // 过滤掉重复的信息，只显示重要的状态变化
-        if(!strstr((char*)wifi.rxbuff, "[单片机接收] AT") && 
-           !strstr((char*)wifi.rxbuff, "[单片机接收] CMD:CONNECTED_TCP") &&
-           !strstr((char*)wifi.rxbuff, "更新BAFA_PRODUCT_ID") &&
-           !strstr((char*)wifi.rxbuff, "更新BAFA_TOPIC_CONTROL") &&
-           !strstr((char*)wifi.rxbuff, "巴法云连接成功，认证信息") &&
-           !strstr((char*)wifi.rxbuff, "WIFI_CONNECTED:2") &&
-           !strstr((char*)wifi.rxbuff, "指令：获取当前时间") &&
-           !strstr((char*)wifi.rxbuff, "Get_Time") &&
-           !strstr((char*)wifi.rxbuff, "[巴法云->单片机] 原始数据: cmd=1&res=1") &&
-           !strstr((char*)wifi.rxbuff, "缺少必要字段") &&
-           !strstr((char*)wifi.rxbuff, "[解析成功] 提取") &&
-           !strstr((char*)wifi.rxbuff, "[单片机接收] CMD:SEND_DATA") &&
-           !strstr((char*)wifi.rxbuff, "[转发到巴法云]")) {
+        if(!strstr((char*)last_rxbuff, "[单片机接收] AT") && 
+           !strstr((char*)last_rxbuff, "[单片机接收] CMD:CONNECTED_TCP") &&
+           !strstr((char*)last_rxbuff, "更新BAFA_PRODUCT_ID") &&
+           !strstr((char*)last_rxbuff, "更新BAFA_TOPIC_CONTROL") &&
+           !strstr((char*)last_rxbuff, "巴法云连接成功，认证信息") &&
+           !strstr((char*)last_rxbuff, "WIFI_CONNECTED:2") &&
+           !strstr((char*)last_rxbuff, "指令：获取当前时间") &&
+           !strstr((char*)last_rxbuff, "Get_Time") &&
+           !strstr((char*)last_rxbuff, "[巴法云->单片机] 原始数据: cmd=1&res=1") &&
+           !strstr((char*)last_rxbuff, "缺少必要字段") &&
+           !strstr((char*)last_rxbuff, "[解析成功] 提取") &&
+           !strstr((char*)last_rxbuff, "[单片机接收] CMD:SEND_DATA") &&
+           !strstr((char*)last_rxbuff, "[转发到巴法云]") &&
+           !strstr((char*)last_rxbuff, "topic=tang2")) {  // 过滤控制指令（已在DataAnylize中处理）
             Serial_SendString("\r\nESP8266 Output: ");
-            Serial_SendString((char*)wifi.rxbuff);
+            Serial_SendString((char*)last_rxbuff);
             Serial_SendString("\r\n");
             
             // 提取并保存关键信息
             
             // 提取WiFi名称
-            char *wifi_pos = strstr((char*)wifi.rxbuff, "Connecting to SAVED AP: ");
+            char *wifi_pos = strstr((char*)last_rxbuff, "Connecting to SAVED AP: ");
             if(wifi_pos != NULL) {
                 char *wifi_start = wifi_pos + strlen("Connecting to SAVED AP: ");
                 char *wifi_end = strstr(wifi_start, " ");
@@ -326,7 +333,7 @@ void Test_ESP8266(void)
             }
             
             // 提取IP地址
-            char *ip_pos = strstr((char*)wifi.rxbuff, "STA IP Address: ");
+            char *ip_pos = strstr((char*)last_rxbuff, "STA IP Address: ");
             if(ip_pos != NULL) {
                 char *ip_start = ip_pos + strlen("STA IP Address: ");
                 char *ip_end = strstr(ip_start, " ");
@@ -342,18 +349,18 @@ void Test_ESP8266(void)
                 Serial_SendString("==> IP地址已更新!\r\n");
             }
             
-            if(strstr((char*)wifi.rxbuff, "WiFi模式: STA")) {
+            if(strstr((char*)last_rxbuff, "WiFi模式: STA")) {
                 strcpy(saved_mode, "STA(客户端模式)");
                 Serial_SendString("==> WiFi模式已更新!\r\n");
             }
             
-            if(strstr((char*)wifi.rxbuff, "WIFI_CONNECTED:1")) {
+            if(strstr((char*)last_rxbuff, "WIFI_CONNECTED:1")) {
                 strcpy(saved_status, "已连接");
                 connect_flag = 1;  // 更新连接标志
                 Serial_SendString("==> 连接状态已更新! (connect_flag=1)\r\n");
             }
             
-            if(strstr((char*)wifi.rxbuff, "AutoConnect: SUCCESS")) {
+            if(strstr((char*)last_rxbuff, "AutoConnect: SUCCESS")) {
                 Serial_SendString("==> WiFi连接成功!\r\n");
                 // 当WiFi连接成功时，更新连接状态
                 connect_flag = 1;
@@ -362,33 +369,33 @@ void Test_ESP8266(void)
             }
             
             // 检测巴法云连接状态
-            if(strstr((char*)wifi.rxbuff, "连接巴法云成功") || 
-               strstr((char*)wifi.rxbuff, "MQTT连接成功") || 
-               strstr((char*)wifi.rxbuff, "TCP连接成功") ||
-               strstr((char*)wifi.rxbuff, "巴法云连接成功")) {
+            if(strstr((char*)last_rxbuff, "连接巴法云成功") || 
+               strstr((char*)last_rxbuff, "MQTT连接成功") || 
+               strstr((char*)last_rxbuff, "TCP连接成功") ||
+               strstr((char*)last_rxbuff, "巴法云连接成功")) {
                 connect_flag = 2;  // 云端连接成功
                 strcpy(saved_status, "云端已连接");
                 Serial_SendString("==> 巴法云连接成功!\r\n");
             }
             
-            if(strstr((char*)wifi.rxbuff, "订阅成功") || 
-               strstr((char*)wifi.rxbuff, "Subscribe") ||
-               strstr((char*)wifi.rxbuff, "主题订阅成功")) {
+            if(strstr((char*)last_rxbuff, "订阅成功") || 
+               strstr((char*)last_rxbuff, "Subscribe") ||
+               strstr((char*)last_rxbuff, "主题订阅成功")) {
                 Serial_SendString("==> 主题订阅成功!\r\n");
             }
             
             // 检测连接过程中的状态
-            if(strstr((char*)wifi.rxbuff, "更新BAFA_PRODUCT_ID")) {
+            if(strstr((char*)last_rxbuff, "更新BAFA_PRODUCT_ID")) {
                 Serial_SendString("==> 巴法云参数配置中...\r\n");
             }
             
             Serial_SendString("---\r\n");
         } else {
             // 对于被过滤的信息，检查是否包含重要的连接状态信息
-            if(strstr((char*)wifi.rxbuff, "[转发到巴法云]")) {
+            if(strstr((char*)last_rxbuff, "[转发到巴法云]")) {
                 Serial_SendString("📤 数据上传成功 ");
                 // 提取温湿度信息显示
-                char *temp_pos = strstr((char*)wifi.rxbuff, "Temp\":");
+                char *temp_pos = strstr((char*)last_rxbuff, "Temp\":");
                 if(temp_pos) {
                     Serial_SendString("(T:");
                     // 简单提取温度值显示
@@ -398,19 +405,19 @@ void Test_ESP8266(void)
                     Serial_SendString("°C)");
                 }
                 Serial_SendString("\r\n");
-            } else if(strstr((char*)wifi.rxbuff, "巴法云连接成功") || 
-                      strstr((char*)wifi.rxbuff, "WIFI_CONNECTED:2")) {
+            } else if(strstr((char*)last_rxbuff, "巴法云连接成功") || 
+                      strstr((char*)last_rxbuff, "WIFI_CONNECTED:2")) {
                 // 检测到巴法云连接成功，更新状态
                 connect_flag = 2;
                 Serial_SendString("🎉 检测到巴法云连接成功! (connect_flag=2)\r\n");
+            } else if(strstr((char*)last_rxbuff, "topic=tang2")) {
+                // 控制指令已在DataAnylize中处理，这里只显示提示
+                Serial_SendString("📥 收到云端控制指令\r\n");
             } else {
                 // 显示一个点表示ESP8266有活动（但是其他信息被过滤了）
                 Serial_SendString(".");
             }
         }
-        
-        // 清除缓冲区
-        Clear_BuffData();
     }
 }
 

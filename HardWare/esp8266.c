@@ -72,12 +72,6 @@ void USART2_IRQHandler(void)
         USART_ReceiveData(USART2);  // 读取DR寄存器
         wifi.rxbuff[wifi.rxcount] = '\0';  // 添加字符串结束符
         wifi.rxover = 1;
-        
-        // 调试：检测是否接收到控制指令
-        if(strstr((char*)wifi.rxbuff, "topic=tang2")) {
-            Serial_SendString("\r\n【USART2中断】接收到tang2控制指令！\r\n");
-        }
-        
         USART_ClearITPendingBit(USART2, USART_IT_IDLE);
     }  
 }
@@ -245,56 +239,25 @@ void DataAnylize(void) {
         wifi.rxover = 0;
         char *topic = NULL;
         
-        // ========== 【调试】显示所有接收到的数据 ==========
-        Serial_SendString("\r\n【DataAnylize被调用】接收到数据: ");
-        Serial_SendString((char*)wifi.rxbuff);
-        Serial_SendString("\r\n");
-        
-        // ========== 【调试】检测控制指令数据 ==========
-        if(strstr((char*)wifi.rxbuff, "topic=tang2") && strstr((char*)wifi.rxbuff, "msg=")) {
-            Serial_SendString("\r\n");
-            Serial_SendString("==========================================\r\n");
-            Serial_SendString("【DataAnylize】检测到tang2控制指令\r\n");
-            Serial_SendString("完整数据: ");
-            Serial_SendString((char*)wifi.rxbuff);
-            Serial_SendString("\r\n");
-            
-            // 查找msg=后的JSON
-            char *msg_pos = strstr((char*)wifi.rxbuff, "msg=");
-            if(msg_pos != NULL) {
-                char *json_pos = strstr(msg_pos, "{");
-                if(json_pos != NULL) {
-                    Serial_SendString("找到JSON: ");
-                    Serial_SendString(json_pos);
-                    Serial_SendString("\r\n");
-                } else {
-                    Serial_SendString("【错误】未找到JSON起始符\r\n");
-                }
-            }
-            Serial_SendString("==========================================\r\n\r\n");
-        }
-        
         // 检查连接状态消息，跳过处理
-        if(strstr((char*)wifi.rxbuff, "CMD:CONNECTED"))goto X;
+        if(strstr((char*)wifi.rxbuff, "CMD:CONNECTED")) goto X;
         
-        // 查找控制主题
+        // 根据不同云平台查找控制主题
         if(connected == 1) {
-            // 方法1: 查找msg=后的JSON (适用于: topic=tang2&msg={"Relay":1})
+            // 巴法云：优先查找msg=格式 (topic=tang2&msg={"Relay":1})
             char *msg_pos = strstr((char*)wifi.rxbuff, "msg=");
             if(msg_pos != NULL && strstr((char*)wifi.rxbuff, "tang2")) {
-                topic = msg_pos;  // 标记找到了控制指令
-                Serial_SendString("【DataAnylize】使用msg=方式查找JSON\r\n");
+                topic = msg_pos;
             }
-            // 方法2: 直接查找tang2
+            // 备用：直接查找tang2格式 (tang2{"Relay":1})
             if(topic == NULL) {
                 topic = strstr((char*)wifi.rxbuff, "tang2");
-                if(topic != NULL) {
-                    Serial_SendString("【DataAnylize】使用tang2方式查找JSON\r\n");
-                }
             }
         } else if(connected == 2) {
+            // 阿里云
             topic = strstr((char*)wifi.rxbuff, "Message");
         } else if(connected == 3) {
+            // 本地HTTP服务器
             topic = strstr((char*)wifi.rxbuff, "http");
         }
         
@@ -302,34 +265,22 @@ void DataAnylize(void) {
             // 定位到JSON数据起始位置
             char *json_start = NULL;
             
-            // 如果是msg=格式，从msg=后查找
+            // 如果是msg=格式，从msg=后查找JSON
             if(strstr((char*)wifi.rxbuff, "msg=")) {
                 char *msg_pos = strstr((char*)wifi.rxbuff, "msg=");
                 json_start = strstr(msg_pos + 4, "{");
-                if(json_start != NULL) {
-                    Serial_SendString("【DataAnylize】从msg=后找到JSON\r\n");
-                }
             }
             
-            // 否则从topic后查找
+            // 否则从topic后查找JSON
             if(json_start == NULL) {
                 json_start = strstr(topic, "{");
-                if(json_start != NULL) {
-                    Serial_SendString("【DataAnylize】从topic后找到JSON\r\n");
-                }
             }
             
             if (json_start == NULL) {
-                Serial_SendString("【DataAnylize错误】未找到JSON数据\r\n");
                 return;  // 没有找到JSON数据
             }
             
-            Serial_SendString("【DataAnylize】开始解析JSON: ");
-            Serial_SendString(json_start);
-            Serial_SendString("\r\n");
-            
             // 遍历映射表，查找并解析每个标签
-            uint8_t found_command = 0;
             for (int i = 0; i < NUM_MAPS; i++) {
                 // 构造完整的搜索模式："标签":
                 char search_pattern[32];
@@ -338,11 +289,6 @@ void DataAnylize(void) {
                 // 查找标签位置
                 char *tag_pos = strstr(json_start, search_pattern);
                 if (tag_pos == NULL) continue;
-                
-                // 找到了匹配的标签
-                Serial_SendString("【DataAnylize】找到标签: ");
-                Serial_SendString(name_flag_maps[i].name);
-                Serial_SendString("\r\n");
                 
                 // 定位到数据起始位置（跳过标签和冒号）
                 char *data_start = tag_pos + strlen(search_pattern);
@@ -362,42 +308,24 @@ void DataAnylize(void) {
                 strncpy(data_str, data_start, data_len);
                 data_str[data_len] = '\0';
                 
-                Serial_SendString("【DataAnylize】提取值: ");
-                Serial_SendString(data_str);
-                Serial_SendString("\r\n");
-                
-                // 根据变量类型解析数据
+                // 根据变量类型解析并更新数据
                 switch (name_flag_maps[i].type) {
                     case TYPE_FLOAT:
                         *(name_flag_maps[i].value.f) = (float)atof(data_str);
-                        Serial_SendString("【DataAnylize】已更新float值\r\n");
                         break;
                     case TYPE_INT:
                         *(name_flag_maps[i].value.i) = atoi(data_str);
-                        Serial_SendString("【DataAnylize】已更新int值\r\n");
                         break;
                     case TYPE_UINT8:
                         *(name_flag_maps[i].value.u8) = (uint8_t)atoi(data_str);
-                        Serial_SendString("【DataAnylize】已更新uint8值\r\n");
                         break;
                     case TYPE_UINT16:
                         *(name_flag_maps[i].value.u16) = (uint16_t)atoi(data_str);
-                        Serial_SendString("【DataAnylize】已更新uint16值: ");
-                        Serial_SendNumber(*(name_flag_maps[i].value.u16), 1);
-                        Serial_SendString("\r\n");
                         break;
                     case TYPE_UINT32:
                         *(name_flag_maps[i].value.u32) = (uint32_t)atoi(data_str);
-                        Serial_SendString("【DataAnylize】已更新uint32值\r\n");
                         break;
                 }
-                found_command = 1;
-            }
-            
-            if(found_command) {
-                Serial_SendString("【DataAnylize】✓ 控制指令解析成功！\r\n");
-            } else {
-                Serial_SendString("【DataAnylize】✗ 未找到匹配的控制指令\r\n");
             }
         }
 				X:
